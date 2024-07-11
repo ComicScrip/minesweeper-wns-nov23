@@ -32,11 +32,16 @@ export function generateBoard(size: number, bombRatio = 0.2): Board {
 }
 
 export const populateWithBombs = (board: Board, bombRatio = 0.2) => {
-  // Remplis la grille avec des bombes placées aléatoirement
-  // Il doit toujours y avoir au moins une bombe.
-  // Le ratio est toujours entre 0 et 1.
-  // exemple : avec un ratio de 0.2 et une grille de 5x5, il y aura 25x0.2 == 25/5 == 5 bombes
-  // exemple : avec un ratio de 0.27 et une grille de 5x5, il y aura 25x0.27 == 7.25 (on arrondit à l'entier supérieur) donc 8 bombes.
+  const allCells = board.flat();
+  const nbBombs = Math.ceil(bombRatio * allCells.length);
+  const indexes: number[] = [];
+  while (indexes.length < nbBombs) {
+    const randomIdx = Math.floor(Math.random() * allCells.length);
+    if (!indexes.includes(randomIdx)) {
+      allCells[randomIdx].val = "💣";
+      indexes.push(randomIdx);
+    }
+  }
 };
 
 export function getNeighbors(board: Board, cell: Cell): Cell[] {
@@ -45,16 +50,25 @@ export function getNeighbors(board: Board, cell: Cell): Cell[] {
   if (cell.x < board.length - 1) res.push(board[cell.y][cell.x + 1]); // right
   if (cell.x < board.length - 1 && cell.y < board.length - 1)
     res.push(board[cell.y + 1][cell.x + 1]); // right-down
-
-  // Prendre en compte les autres directions possibles...
+  if (cell.y < board.length - 1) res.push(board[cell.y + 1][cell.x]); // down
+  if (cell.x > 0 && cell.y < board.length - 1)
+    res.push(board[cell.y + 1][cell.x - 1]); // left-down
+  if (cell.x > 0) res.push(board[cell.y][cell.x - 1]); // left
+  if (cell.x > 0 && cell.y > 0) res.push(board[cell.y - 1][cell.x - 1]); // left-up
+  if (cell.y > 0) res.push(board[cell.y - 1][cell.x]); // up
+  if (cell.y > 0 && cell.x < board.length - 1)
+    res.push(board[cell.y - 1][cell.x + 1]); // right up
 
   return res;
 }
 
 export function populateWithBombsCount(board: Board) {
-  // Pour chaque cellule ne contenant pas de bombe
-  // ajoute le nombre de bombes dans les cases voisines de la cellule
-  // (le nombre de nombes doit etre assigné à la propriété "val" de la cellule)
+  board
+    .flat()
+    .filter((cell) => cell.val !== "💣")
+    .forEach((cell) => {
+      cell.val = "🤭" as any;
+    });
 }
 
 export function revealCell(cell: Cell) {
